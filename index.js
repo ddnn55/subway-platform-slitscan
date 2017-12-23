@@ -1,5 +1,4 @@
 import superagent from 'superagent';
-
 import ShardedMapView from 'shardedmapview';
 
 const info = require('./info.json');
@@ -25,6 +24,15 @@ let preload = {};
 //   require('./preload/zoom-2.json')
 // );
 
+const D = v => new ShardedMapView.DecimalConfigured(v);
+const denormalize = (value, range) => {
+  console.log({value: value.toString()})
+  const span = D(range[1]).minus(range[0]);
+  console.log('span', span.toString());
+  const valueTimesSpan = D(value).times(span);
+  console.log('valueTimesSpan', valueTimesSpan.toString());
+  return D(range[0]).plus(valueTimesSpan)
+};
 
 // superagent.get('preload/all.json').end((err, res) => {
 //   console.log({res});
@@ -162,7 +170,7 @@ function getScrollProgress() {
     const maxX = 0;
     const progress = 1 - (spacerRect.left - minX) / (maxX - minX);
     console.log({progress});
-    return 0;
+    return progress;
 }
 
 
@@ -187,6 +195,7 @@ const getHash = () => {
 
 const ease = 0;
 let zoomTarget;
+let centerTarget;
 const doEase = () => {
   globalView.setView({
     zoom: zoomTarget * (1-ease) + globalView.zoom() * ease,
@@ -198,8 +207,19 @@ const doEase = () => {
 };
 
 function doSomething(scroll_percent) {
-  zoomTarget = minZoom + scroll_percent * (maxZoom - minZoom);
-  doEase();
+  // zoomTarget = minZoom + scroll_percent * (maxZoom - minZoom);
+  const x = denormalize(scroll_percent, [info.bounds.left, info.bounds.right]);
+  console.log(info.bounds);
+  console.log(x.toString());
+  globalView.setView({
+    zoom: minZoom,
+    center: {
+      y: center.y,
+      // TODO add half viewport width padding
+      x
+    }
+  });
+  // doEase();
   // replaceHash(zoomTarget);
 }
 
