@@ -213,7 +213,6 @@ function doSomething(scroll_percent) {
     zoom: minZoom,
     center: {
       y: center.y,
-      // TODO add half viewport width padding
       x
     }
   });
