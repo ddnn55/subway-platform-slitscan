@@ -2,9 +2,12 @@ import superagent from 'superagent';
 
 import ShardedMapView from 'shardedmapview';
 
-var scrollScreenCount = 10;
+const info = require('./info.json');
+console.log({info});
+
 var spacer = document.querySelector('.spacer');
-spacer.style.height = `${scrollScreenCount*100}vh`;
+spacer.style.height = '100vh';
+spacer.style.width = `${info.aspect*100}vh`;
 var minZoom = -1.5;
 var maxZoom = -1.5;
 // var minZoom = 2;
@@ -73,7 +76,7 @@ const createShardLayer = shard => {
   return new ol.layer.Tile({
     source: new ol.source.XYZ({
       tileUrlFunction: function(tileCoord, pixelRatio, projection) {
-        console.log('start tileUrlFunction', arguments);
+        // console.log('start tileUrlFunction', arguments);
         const localTileCoord = {
           z: tileCoord[0],
           y: -1-tileCoord[2],
@@ -153,7 +156,13 @@ var ticking = false;
 var spacer = document.querySelector('.spacer');
 var mapEl = document.querySelector('.map');
 function getScrollProgress() {
-    return Math.abs(spacer.getBoundingClientRect().top / (scrollScreenCount * mapEl.getBoundingClientRect().height * (scrollScreenCount-1)/scrollScreenCount));
+    const spacerRect = spacer.getBoundingClientRect();
+    const mapRect = mapEl.getBoundingClientRect();
+    const minX = -(spacerRect.width - mapRect.width);
+    const maxX = 0;
+    const progress = 1 - (spacerRect.left - minX) / (maxX - minX);
+    console.log({progress});
+    return 0;
 }
 
 
