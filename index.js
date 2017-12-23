@@ -176,6 +176,12 @@ function getScrollProgress() {
 }
 
 
+const getZoomToFitSceneHeightInViewport = () => {
+  const viewportToScene = mapEl.getBoundingClientRect().height / (info.bounds.top - info.bounds.bottom);
+  console.log({viewportToScene});
+  return viewportToScene;
+};
+
 document.querySelector('.scroller').addEventListener('click', e => {
   console.log(globalView.zoom());
 });
@@ -210,7 +216,7 @@ function doSomething(scroll_percent) {
   // console.log(info.bounds);
   // console.log(x.toString());
   globalView.setView({
-    zoom: minZoom,
+    zoom: getZoomToFitSceneHeightInViewport() - 2,
     center: {
       y: center.y,
       x
@@ -220,7 +226,7 @@ function doSomething(scroll_percent) {
   // replaceHash(zoomTarget);
 }
 
-document.querySelector('.scroller').addEventListener('scroll', function(e) {
+function update(e) {
   last_known_scroll_progress = getScrollProgress();
   if (!ticking) {
     window.requestAnimationFrame(function() {
@@ -229,4 +235,7 @@ document.querySelector('.scroller').addEventListener('scroll', function(e) {
     });
   }
   ticking = true;
-});
+}
+
+document.querySelector('.scroller').addEventListener('scroll', update);
+window.addEventListener('resize', update);
