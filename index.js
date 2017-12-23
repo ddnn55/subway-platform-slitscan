@@ -8,7 +8,7 @@ var spacer = document.querySelector('.spacer');
 var mapEl = document.querySelector('.map');
 
 spacer.style.height = '100vh';
-spacer.style.width = `${info.aspect*50}vh`;
+spacer.style.width = `${info.aspect*100}vh`;
 
 // var minZoom = 2;
 // var center = {x: 176, y: 48};
