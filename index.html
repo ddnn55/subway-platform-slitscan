@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Subway Platforms</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <!--<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>-->
+    <script src="ol.js"></script>
+    <style>
+    .map {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    .spacer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+    }
+    .title {
+      position: absolute;
+      text-align: right;
+      font-size: 4em;
+      font-family: Georgia, serif;
+      padding: 1em;
+      width: 50%;
+      right: 0;
+    }
+    @media (max-width: 700px) {
+      .title {
+        font-size: 3em;
+        padding: 0.55em;
+      }
+    }
+    </style>
+  </head>
+  <body style="background-color: white">
+    <div id="map" class="map"></div>
+        
+    <div class="scroller" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: scroll; overflow-scrolling: touch; -webkit-overflow-scrolling: touch;">
+      <div class="spacer">
+        <div class="title">
+          Subway Platforms
+        </div>
+      </div>
+    </div>
+
+    <script src="bundle.js"></script>
+  </body>
+</html>
