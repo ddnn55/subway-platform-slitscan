@@ -7,6 +7,8 @@ console.log({info});
 var spacer = document.querySelector('.spacer');
 spacer.style.height = '100vh';
 spacer.style.width = `${info.aspect*100}vh`;
+
+// TODO set zoom based on viewport height
 var minZoom = -1.5;
 var maxZoom = -1.5;
 // var minZoom = 2;
@@ -190,19 +192,6 @@ const getHash = () => {
   }
   else {
     return null;
-  }
-};
-
-const ease = 0;
-let zoomTarget;
-let centerTarget;
-const doEase = () => {
-  globalView.setView({
-    zoom: zoomTarget * (1-ease) + globalView.zoom() * ease,
-    center: center
-  });
-  if(Math.abs(zoomTarget - globalView.zoom()) > 0.01) {
-    requestAnimationFrame(doEase);
   }
 };
 
