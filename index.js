@@ -26,11 +26,11 @@ let preload = {};
 
 const D = v => new ShardedMapView.DecimalConfigured(v);
 const denormalize = (value, range) => {
-  console.log({value: value.toString()})
+  // console.log({value: value.toString()})
   const span = D(range[1]).minus(range[0]);
-  console.log('span', span.toString());
+  // console.log('span', span.toString());
   const valueTimesSpan = D(value).times(span);
-  console.log('valueTimesSpan', valueTimesSpan.toString());
+  // console.log('valueTimesSpan', valueTimesSpan.toString());
   return D(range[0]).plus(valueTimesSpan)
 };
 
@@ -169,7 +169,7 @@ function getScrollProgress() {
     const minX = -(spacerRect.width - mapRect.width);
     const maxX = 0;
     const progress = 1 - (spacerRect.left - minX) / (maxX - minX);
-    console.log({progress});
+    // console.log({progress});
     return progress;
 }
 
@@ -207,10 +207,19 @@ const doEase = () => {
 };
 
 function doSomething(scroll_percent) {
-  // zoomTarget = minZoom + scroll_percent * (maxZoom - minZoom);
-  const x = denormalize(scroll_percent, [info.bounds.left, info.bounds.right]);
-  console.log(info.bounds);
-  console.log(x.toString());
+  // TODO use the previous call to this
+  const mapRect = mapEl.getBoundingClientRect();
+  const viewportAspect = mapRect.width / mapRect.height;
+  const viewportWidthInSceneSpace = (info.bounds.top - info.bounds.bottom) * viewportAspect;
+  // console.log({viewportWidthInSceneSpace});
+  const halfViewportWidthInSceneSpace = viewportWidthInSceneSpace / 2;
+  // console.log({halfViewportWidthInSceneSpace});
+  const x = denormalize(scroll_percent, [
+    D(info.bounds.left).plus(halfViewportWidthInSceneSpace),
+    D(info.bounds.right).minus(halfViewportWidthInSceneSpace)
+  ]);
+  // console.log(info.bounds);
+  // console.log(x.toString());
   globalView.setView({
     zoom: minZoom,
     center: {
@@ -233,10 +242,3 @@ document.querySelector('.scroller').addEventListener('scroll', function(e) {
   }
   ticking = true;
 });
-
-// if(getHash().length) {
-//   globalView.setView({
-//     zoom: +getHash(),
-//     center: center
-//   });
-// }
