@@ -5,12 +5,11 @@ const info = require('./info.json');
 console.log({info});
 
 var spacer = document.querySelector('.spacer');
-spacer.style.height = '100vh';
-spacer.style.width = `${info.aspect*100}vh`;
+var mapEl = document.querySelector('.map');
 
-// TODO set zoom based on viewport height
-var minZoom = -1.5;
-var maxZoom = -1.5;
+spacer.style.height = '100vh';
+spacer.style.width = `${info.aspect*50}vh`;
+
 // var minZoom = 2;
 // var center = {x: 176, y: 48};
 var center = {"x":"30200","y":"-960"};
@@ -46,7 +45,7 @@ const localOlMinZoom = 0;
 const localOlMaxZoom = 32;
 
 window.olView = new ol.View({
-  zoom: minZoom,
+  zoom: localOlMinZoom,
   minZoom: localOlMinZoom,
   maxZoom: localOlMaxZoom
 });
@@ -126,6 +125,33 @@ const createShardLayer = shard => {
   });
 };
 
+const getZoomToFitSceneHeightInViewport = () => {
+  const viewportHeight = mapEl.getBoundingClientRect().height;
+  const zoom = Math.log2(viewportHeight / (info.bounds.top - info.bounds.bottom));
+  return zoom;
+};
+
+const getViewForProgress = progress => {
+  // TODO use the previous call to this
+  const mapRect = mapEl.getBoundingClientRect();
+  const viewportAspect = mapRect.width / mapRect.height;
+  const viewportWidthInSceneSpace = (info.bounds.top - info.bounds.bottom) * viewportAspect;
+  // console.log({viewportWidthInSceneSpace});
+  const halfViewportWidthInSceneSpace = viewportWidthInSceneSpace / 2;
+  // console.log({halfViewportWidthInSceneSpace});
+  const x = denormalize(progress, [
+    D(info.bounds.left).plus(halfViewportWidthInSceneSpace),
+    D(info.bounds.right).minus(halfViewportWidthInSceneSpace)
+  ]);
+  return {
+    zoom: getZoomToFitSceneHeightInViewport(),
+    center: {
+      y: center.y,
+      x
+    }
+  };
+};
+
 let activeShardLayer;
 var globalView = ShardedMapView({
   shardExtent: ShardedMapView.Bounds({
@@ -134,10 +160,7 @@ var globalView = ShardedMapView({
     right: viewExtent[2],
     top: viewExtent[3]
   }),
-  initialView: {
-    zoom: minZoom,
-    center: center
-  },
+  initialView: getViewForProgress(0),
   setActiveShard: shard => {
     shard.key()
     if(activeShardLayer) {
@@ -163,24 +186,14 @@ var globalView = ShardedMapView({
 var last_known_scroll_progress = 0;
 var ticking = false;
 
-var spacer = document.querySelector('.spacer');
-var mapEl = document.querySelector('.map');
 function getScrollProgress() {
     const spacerRect = spacer.getBoundingClientRect();
     const mapRect = mapEl.getBoundingClientRect();
     const minX = -(spacerRect.width - mapRect.width);
     const maxX = 0;
     const progress = 1 - (spacerRect.left - minX) / (maxX - minX);
-    // console.log({progress});
     return progress;
 }
-
-
-const getZoomToFitSceneHeightInViewport = () => {
-  const viewportToScene = mapEl.getBoundingClientRect().height / (info.bounds.top - info.bounds.bottom);
-  console.log({viewportToScene});
-  return viewportToScene;
-};
 
 document.querySelector('.scroller').addEventListener('click', e => {
   console.log(globalView.zoom());
@@ -202,26 +215,9 @@ const getHash = () => {
 };
 
 function doSomething(scroll_percent) {
-  // TODO use the previous call to this
-  const mapRect = mapEl.getBoundingClientRect();
-  const viewportAspect = mapRect.width / mapRect.height;
-  const viewportWidthInSceneSpace = (info.bounds.top - info.bounds.bottom) * viewportAspect;
-  // console.log({viewportWidthInSceneSpace});
-  const halfViewportWidthInSceneSpace = viewportWidthInSceneSpace / 2;
-  // console.log({halfViewportWidthInSceneSpace});
-  const x = denormalize(scroll_percent, [
-    D(info.bounds.left).plus(halfViewportWidthInSceneSpace),
-    D(info.bounds.right).minus(halfViewportWidthInSceneSpace)
-  ]);
   // console.log(info.bounds);
   // console.log(x.toString());
-  globalView.setView({
-    zoom: getZoomToFitSceneHeightInViewport() - 2,
-    center: {
-      y: center.y,
-      x
-    }
-  });
+  globalView.setView(getViewForProgress(scroll_percent));
   // doEase();
   // replaceHash(zoomTarget);
 }
