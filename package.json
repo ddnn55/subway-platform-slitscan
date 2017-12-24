@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "serve": "webpack-dev-server --progress --colors --compress",
+    "serve": "webpack-dev-server --disable-host-check --host 0.0.0.0 --progress --colors --compress",
     "build": "webpack",
     "publish-gh-pages": "(git checkout -b gh-pages || git checkout gh-pages) && git merge master --no-edit && webpack && git add -f index.html bundle.js && (git commit -m \"publish to gh-pages\" || echo \"No change since last build.\") && git push origin gh-pages && git checkout master"
   },
