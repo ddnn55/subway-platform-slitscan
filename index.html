@@ -21,6 +21,25 @@
       left: 0;
       right: 0;
       z-index: 1;
+      display: flex;
+      align-items: center;
+    }
+    .cta-container {
+      font-family: sans-serif;
+      width: 100vw;
+      position: relative;
+      vertical-align: middle;
+    }
+    .cta {
+      transform: translateY(-50%);
+      position: absolute;
+      right: 0;
+      font-size: 3em;
+      padding: 0.5em;
+      margin-right: 0.5em;
+      background-color: rgba(255, 255, 255, 0.75);
+      box-sizing: border-box;
+      text-align: right;
     }
     .title {
       position: absolute;
@@ -44,6 +63,11 @@
         
     <div class="scroller" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: scroll; overflow-scrolling: touch; -webkit-overflow-scrolling: touch;">
       <div class="spacer">
+        <div class="cta-container">
+          <div class="cta">
+            Scroll that<br/>way →
+          </div>
+        </div>
       </div>
     </div>
 
