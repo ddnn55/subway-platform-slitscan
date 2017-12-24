@@ -1,4 +1,6 @@
 import superagent from 'superagent';
+import async from 'async';
+
 import ShardedMapView from 'shardedmapview';
 
 const info = require('./info.json');
@@ -79,6 +81,75 @@ map.on('zoom', function(e) {
 
 const viewExtent = olView.getProjection().getExtent();
 
+const preloadThreadKeyForGlobalTileCoord = globalTileCoord => (
+  `${globalTileCoord.z}/${globalTileCoord.y.toString()}`
+);
+
+const preloadedBlobUrls = {};
+
+const makePreloadThread = seedGlobalTileCoord => {
+  let img = new Image();
+  let stopLookingForTiles = false;
+  const preloadThreadKey = preloadThreadKeyForGlobalTileCoord(seedGlobalTileCoord);
+  console.log('makePreloadThread', preloadThreadKey);
+  let dx = 1;
+  async.doUntil(callback => {
+    const loadGlobalTileCoord = {
+      z: seedGlobalTileCoord.z,
+      y: seedGlobalTileCoord.y,
+      x: seedGlobalTileCoord.x.plus(dx)
+    };
+    dx++;
+    const url = urlForGlobalTileCoord(loadGlobalTileCoord);
+    // img.onload = function() {
+    //   console.log('loaded', url);
+    //   callback();
+    // };
+    // img.onerror = function() {
+    //   console.error('could not load', url);
+    //   stopLookingForTiles = true;
+    //   callback();
+    // };
+    // img.src = url;
+
+    // from https://stackoverflow.com/questions/7650587/using-javascript-to-display-blob
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = "blob";
+    xhr.onload = function(e) {
+      const urlCreator = window.URL || window.webkitURL;
+      const blobUrl = urlCreator.createObjectURL(this.response);
+      preloadedBlobUrls[url] = blobUrl;
+      console.log('saved', url, blobUrl);
+      callback();
+    };
+    xhr.onerror = function() {
+      console.error('xhr: something went wrong, let\'s just stop. we can\'t even.');
+      stopLookingForTiles = true;
+      callback();
+    };
+    xhr.onloadend = function() {
+      if(xhr.status == 404) {
+        stopLookingForTiles = true;
+      }
+    };
+    xhr.send();
+  }, () => stopLookingForTiles, (err, result) => {
+    console.log(`preloader ${preloadThreadKey} is done looking for tiles.`);
+  });
+  return {};
+};
+
+let preloadThreads = {};
+const ensureRowPreloading = globalTileCoord => {
+  const preloadThreadKey = preloadThreadKeyForGlobalTileCoord(
+    globalTileCoord
+  );
+  if(!preloadThreads[preloadThreadKey]) {
+    preloadThreads[preloadThreadKey] = makePreloadThread(globalTileCoord);
+  }
+}
+
 let shardLayers = {};
 
 const createShardLayer = shard => {
@@ -92,22 +163,20 @@ const createShardLayer = shard => {
           x: tileCoord[1]
         };
         const globalTileCoord = shard.localTileCoordToGlobalTileCoord(localTileCoord);
-        // console.info({globalTileCoord});
-        const tile = ShardedMapView.Tile({
-          zoom: globalTileCoord.z,
-          row: globalTileCoord.y,
-          column: globalTileCoord.x
-        });
-        if(tile.key() in preload) {
+        
+        ensureRowPreloading(globalTileCoord);
+
+        const url = urlForGlobalTileCoord(globalTileCoord);
+        if(url in preloadedBlobUrls) {
           // console.info(`${tile.key()} is in preload. using data URL`);
-          return preload[tile.key()];
+          return preloadedBlobUrls[url];
         }
         // else {
         //   return 'gray_test_tile.png';
         // }
         else {
           // console.info(tile.key());
-          const url = urlForGlobalTileCoord(globalTileCoord);
+          
           // console.log(`${tile.key()} is NOT in preload. loading from remote ${url}`);
           return url;
         }
